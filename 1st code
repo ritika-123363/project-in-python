@@ -1,0 +1,177 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define the contact structure
+typedef struct {
+    char name[100];
+    char phone[20];
+    char email[100];
+} Contact;
+
+// Define the BST node structure
+typedef struct Node {
+    Contact contact;
+    struct Node *left, *right;
+} Node;
+
+// Function to create a new node
+Node* createNode(Contact contact) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->contact = contact;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Function to insert a contact into the BST
+Node* insert(Node* root, Contact contact) {
+    if (root == NULL) {
+        return createNode(contact);
+    }
+
+    if (strcmp(contact.name, root->contact.name) < 0) {
+        root->left = insert(root->left, contact);
+    } else if (strcmp(contact.name, root->contact.name) > 0) {
+        root->right = insert(root->right, contact);
+    }
+
+    return root;
+}
+
+// Function to find the minimum value node in the BST
+Node* findMin(Node* root) {
+    while (root->left != NULL) {
+        root = root->left;
+    }
+    return root;
+}
+
+// Function to delete a contact from the BST
+Node* delete(Node* root, char* name) {
+    if (root == NULL) {
+        return root;
+    }
+
+    if (strcmp(name, root->contact.name) < 0) {
+        root->left = delete(root->left, name);
+    } else if (strcmp(name, root->contact.name) > 0) {
+        root->right = delete(root->right, name);
+    } else {
+        if (root->left == NULL) {
+            Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        Node* temp = findMin(root->right);
+        root->contact = temp->contact;
+        root->right = delete(root->right, temp->contact.name);
+    }
+
+    return root;
+}
+
+// Function to search for a contact by name
+Node* search(Node* root, char* name) {
+    if (root == NULL || strcmp(root->contact.name, name) == 0) {
+        return root;
+    }
+
+    if (strcmp(name, root->contact.name) < 0) {
+        return search(root->left, name);
+    } else {
+        return search(root->right, name);
+    }
+}
+
+// Function to display contacts in alphabetical order
+void inorder(Node* root) {
+    if (root != NULL) {
+        inorder(root->left);
+        printf("Name: %s, Phone: %s, Email: %s\n", root->contact.name, root->contact.phone, root->contact.email);
+        inorder(root->right);
+    }
+}
+
+// Function to display the menu
+void menu() {
+    printf("\nContact Management System\n");
+    printf("1. Insert a new contact\n");
+    printf("2. Delete a contact\n");
+    printf("3. Search for a contact\n");
+    printf("4. Display all contacts\n");
+    printf("5. Exit\n");
+    printf("Enter your choice: ");
+}
+
+int main() {
+    Node* root = NULL;
+    int choice;
+    Contact contact;
+    char name[100];
+
+    do {
+        menu();
+        scanf("%d", &choice);
+        getchar(); // Consume newline character
+
+        switch (choice) {
+            case 1:
+                printf("Enter name: ");
+                fgets(contact.name, sizeof(contact.name), stdin);
+                contact.name[strcspn(contact.name, "\n")] = '\0'; // Remove newline character
+
+                printf("Enter phone: ");
+                fgets(contact.phone, sizeof(contact.phone), stdin);
+                contact.phone[strcspn(contact.phone, "\n")] = '\0'; // Remove newline character
+
+                printf("Enter email: ");
+                fgets(contact.email, sizeof(contact.email), stdin);
+                contact.email[strcspn(contact.email, "\n")] = '\0'; // Remove newline character
+
+                root = insert(root, contact);
+                printf("Contact inserted successfully.\n");
+                break;
+
+            case 2:
+                printf("Enter name of contact to delete: ");
+                fgets(name, sizeof(name), stdin);
+                name[strcspn(name, "\n")] = '\0'; // Remove newline character
+
+                root = delete(root, name);
+                printf("Contact deleted successfully.\n");
+                break;
+
+            case 3:
+                printf("Enter name of contact to search: ");
+                fgets(name, sizeof(name), stdin);
+                name[strcspn(name, "\n")] = '\0'; // Remove newline character
+
+                Node* result = search(root, name);
+                if (result != NULL) {
+                    printf("Contact found: Name: %s, Phone: %s, Email: %s\n", result->contact.name, result->contact.phone, result->contact.email);
+                } else {
+                    printf("Contact not found.\n");
+                }
+                break;
+
+            case 4:
+                printf("Displaying all contacts:\n");
+                inorder(root);
+                break;
+
+            case 5:
+                printf("Exiting the program.\n");
+                break;
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 5);
+
+    return 0;
+}
